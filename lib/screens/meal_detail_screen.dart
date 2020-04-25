@@ -4,6 +4,10 @@ import "../dummy_data.dart";
 class MealDetailScreen extends StatelessWidget {
   static final routeName = "/meal-detail";
 
+  final Function toggleFav;
+  final Function isMealFav;
+  MealDetailScreen(this.toggleFav, this.isMealFav);
+
   Widget buildSectionTitle(BuildContext context, String title) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
@@ -83,10 +87,10 @@ class MealDetailScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pop(mealId);
-        },
-        child: Icon(Icons.delete),
+        onPressed: () => toggleFav(mealId),
+        child: Icon(
+          isMealFav(mealId) ? Icons.star : Icons.star_border,
+        ),
       ),
     );
   }

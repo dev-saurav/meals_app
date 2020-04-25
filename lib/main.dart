@@ -4,6 +4,8 @@ import 'package:meals_app/screens/category_meals_screen.dart';
 import 'package:meals_app/screens/filters_screen.dart';
 import 'package:meals_app/screens/meal_detail_screen.dart';
 import 'package:meals_app/screens/tabs_screen.dart';
+import './dummy_data.dart';
+import './models/Meal.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,8 +21,48 @@ class _MyAppState extends State<MyApp> {
     'vegetarian': false,
     'vegan': false,
   };
+  List<Meal> _avilableMeals = DUMMY_MEALS;
+  List<Meal> _favMeals = [];
 
-  void _setFilters(Map<String, bool> filterData) {}
+  void _setFilters(Map<String, bool> filterData) {
+    setState(() {
+      _filters = filterData;
+      _avilableMeals = DUMMY_MEALS.where((meal) {
+        if (_filters['gluten'] && !meal.isGlutenFree) {
+          return false;
+        }
+        if (_filters['lactose'] && !meal.isLactoseFree) {
+          return false;
+        }
+        if (_filters['vegetarian'] && !meal.isVegetarian) {
+          return false;
+        }
+        if (_filters['vegan'] && !meal.isVegan) {
+          return false;
+        }
+        return true;
+      }).toList();
+    });
+  }
+
+  void toggleFav(String id) {
+    final existingIndex = _favMeals.indexWhere((meal) => meal.id == id);
+    if (existingIndex >= 0) {
+      setState(() {
+        _favMeals.removeAt(existingIndex);
+      });
+    } else {
+      setState(() {
+        _favMeals.add(
+          DUMMY_MEALS.firstWhere((meal) => meal.id == id),
+        );
+      });
+    }
+  }
+
+  bool isMealFav(String id) {
+    return _favMeals.any((meal) => meal.id == id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +88,12 @@ class _MyAppState extends State<MyApp> {
       ),
       initialRoute: "/",
       routes: {
-        "/": (ctx) => TabScreen(),
-        CategoryMealsScreen.routeName: (ctx) => CategoryMealsScreen(),
-        MealDetailScreen.routeName: (ctx) => MealDetailScreen(),
-        FiltersScreen.routeName: (ctx) => FiltersScreen(),
+        "/": (ctx) => TabScreen(_favMeals),
+        CategoryMealsScreen.routeName: (ctx) =>
+            CategoryMealsScreen(_avilableMeals),
+        MealDetailScreen.routeName: (ctx) =>
+            MealDetailScreen(toggleFav, isMealFav),
+        FiltersScreen.routeName: (ctx) => FiltersScreen(_setFilters, _filters),
       },
       onUnknownRoute: (setting) {
         return MaterialPageRoute(builder: (ctx) => CategoriesScreen());
